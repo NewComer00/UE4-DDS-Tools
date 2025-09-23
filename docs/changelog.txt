@@ -1,3 +1,6 @@
+ver 0.6.2
+- Added rudimentary support for UE5.5.
+
 ver 0.6.1
 - Added support for non-2D textures with mipmaps.
 - Fixed errors when reading some ucas/utoc assets from UE5.4 games
