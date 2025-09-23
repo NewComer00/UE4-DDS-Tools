@@ -226,6 +226,10 @@ class NumArrayBase:
         ar.write(binary)
 
 
+class Uint8Array(NumArrayBase):
+    elm_type = "B"
+    elm_size = 1
+
 class Uint32Array(NumArrayBase):
     elm_type = "I"
     elm_size = 4

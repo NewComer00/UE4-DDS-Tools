@@ -22,7 +22,7 @@ class Umipmap(SerializableBase):
             if uasset.is_ucas:
                 self.data_resource = BulkDataMapEntry()
             else:
-                self.data_resource = UassetDataResource()
+                self.data_resource = UassetDataResource(uasset.header.data_resource_version)
         else:
             self.data_resource = LegacyDataResource()
 

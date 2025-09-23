@@ -1,8 +1,8 @@
 """"""
 
 from enum import IntEnum
-from .archive import (ArchiveBase, Int64, Int32, Uint32,
-                      SerializableBase)
+from .archive import (ArchiveBase, Int64, Int32, Uint32, Uint8,
+                      SerializableBase, Uint8Array)
 
 
 class BulkDataFlags(IntEnum):
@@ -33,6 +33,12 @@ class BulkType(IntEnum):
             return dic[type_int]
         else:
             return None
+
+
+class ObjectDataResourceVersion(IntEnum):
+    Invalid = 0
+    Initial = 1
+    AddedCookedIndex = 2
 
 
 class DataResourceBase:
@@ -161,11 +167,13 @@ class UassetDataResource(SerializableBase, DataResourceBase):
         UnrealEngine/Engine/Source/Runtime/CoreUObject/Private/UObject/ObjectResource.cpp
         The latest UE version will write the meta data in .uasset.
     """
-    def __init__(self):
+    def __init__(self, data_resource_version: ObjectDataResourceVersion = ObjectDataResourceVersion.Initial):
         super().__init__()
         self.flags = 0
+        self.cooked_index = 0
         self.duplicated_offset = -1
         self.outer_index = 1
+        self.data_resource_version = data_resource_version
 
     def serialize(self, ar: ArchiveBase):
         if ar.is_writing:
@@ -173,6 +181,8 @@ class UassetDataResource(SerializableBase, DataResourceBase):
                 self.update_bulk_flags(ar)
 
         ar << (Uint32, self, "flags")
+        if self.data_resource_version >= ObjectDataResourceVersion.AddedCookedIndex:
+            ar << (Uint8, self, "cooked_index")
         ar << (Int64, self, "offset")
         ar << (Int64, self, "duplicated_offset")
         ar << (Int64, self, "data_size")
@@ -191,6 +201,8 @@ class UassetDataResource(SerializableBase, DataResourceBase):
         pad = " " * padding
         print(pad + "DataResource")
         print(pad + f"  flags: {self.flags}")
+        if self.data_resource_version >= ObjectDataResourceVersion.AddedCookedIndex:
+            print(pad + f"  cooked_index: {self.cooked_index}")
         print(pad + f"  serial offset: {self.offset}")
         print(pad + f"  duplicated serial offset: {self.duplicated_offset}")
         print(pad + f"  data size: {self.data_size}")
@@ -209,6 +221,7 @@ class BulkDataMapEntry(SerializableBase, DataResourceBase):
         super().__init__()
         self.flags = 0
         self.duplicated_offset = -1
+        self.cooked_index = 0
 
     def serialize(self, ar: ArchiveBase):
         if ar.is_writing:
@@ -219,7 +232,8 @@ class BulkDataMapEntry(SerializableBase, DataResourceBase):
         ar << (Int64, self, "duplicated_offset")
         ar << (Int64, self, "data_size")
         ar << (Uint32, self, "bulk_flags")
-        ar == (Uint32, 0, "pad")
+        ar << (Uint8, self, "cooked_index")
+        ar == (Uint8Array, [0, 0, 0], "pad", 3)
 
         if ar.is_reading:
             self.unpack_bulk_flags(ar)

@@ -252,11 +252,11 @@ class UassetFileSummary(FileSummaryBase):
                 return []
             self.data_resource_count = len(data_resources)
 
-        ar == (Int32, 1, "deta_resource_version")
+        ar << (Int32, self, "data_resource_version")
         ar << (Int32, self, "data_resource_count")
 
         if ar.is_reading:
-            data_resources = [UassetDataResource() for i in range(self.data_resource_count)]
+            data_resources = [UassetDataResource(self.data_resource_version) for i in range(self.data_resource_count)]
         list(map(lambda x: x.serialize(ar), data_resources))
         return data_resources
 
