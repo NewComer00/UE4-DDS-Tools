@@ -148,6 +148,11 @@ class Uasset:
                 self.data_resources = self.header.serialize_data_resources(ar, self.data_resources)
 
         if ar.is_reading:
+            # some tools (like retoc) insert null padding before the first export
+            if self.exports:
+                null_padding_size = self.exports[0].offset - ar.tell()
+                ar << (Bytes, self, "null_padding", null_padding_size)
+                ar.check(self.null_padding, b"\0" * null_padding_size)
             ar.check(ar.tell(), self.get_size())
             if self.is_ucas:
                 self.uexp_size = ar.size - self.header.uasset_size
@@ -158,6 +163,8 @@ class Uasset:
                 self.bin_dict["ubulk"] = ar.read(ar.size - ar.tell() - 4)
                 ar == (Bytes, self.header.tag, "tail_tag", 4)
         else:
+            if hasattr(self, "null_padding"):
+                ar << (Bytes, self, "null_padding")
             self.header.uasset_size = ar.tell()
             self.header.bulk_offset = self.uexp_size + self.header.uasset_size
             self.header.name_count = len(self.name_list)
