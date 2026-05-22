@@ -10,6 +10,9 @@ env:
   ZIP_NAME: UE4-DDS-Tools
   GUI_VERSION: v0.6.3
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: windows-2022
